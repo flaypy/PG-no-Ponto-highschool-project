@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PG no Ponto - Dashboard</title>
+
+  <!-- Bootstrap & FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Firebase SDKs -->
+  <script defer src="/__/firebase/11.6.1/firebase-app-compat.js"></script>
+  <script defer src="/__/firebase/11.6.1/firebase-auth-compat.js"></script>
+  <script defer src="/__/firebase/11.6.1/firebase-firestore-compat.js"></script>
+  <script defer src="/__/firebase/init.js?useEmulator=false"></script>
+
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+    }
+
+    .sidebar {
+      background-color: var(--primary-color);
+      color: white;
+      height: 100vh;
+      position: fixed;
+      width: 250px;
+      transition: all 0.3s;
+    }
+
+    .sidebar .nav-link {
+      color: rgba(255, 255, 255, 0.8);
+      border-radius: 5px;
+      margin-bottom: 5px;
+    }
+
+    .sidebar .nav-link:hover, .sidebar .nav-link.active {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    .sidebar .nav-link i {
+      margin-right: 10px;
+      width: 20px;
+      text-align: center;
+    }
+
+    .main-content {
+      margin-left: 250px;
+      padding: 20px;
+      transition: all 0.3s;
+    }
+
+    .card {
+      border: none;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card-icon {
+      font-size: 2rem;
+      color: var(--secondary-color);
+    }
+
+    .problem-card .badge {
+      font-size: 0.8rem;
+      padding: 5px 10px;
+    }
+
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    .report-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 1000;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        margin-left: -250px;
+      }
+      .sidebar.active {
+        margin-left: 0;
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .main-content.active {
+        margin-left: 250px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <div class="d-flex flex-column h-100">
+      <div class="p-3 text-center">
+        <i class="fas fa-map-marked-alt fa-2x mb-2"></i>
+        <h4>PG no Ponto</h4>
+      </div>
+      <hr class="bg-secondary mx-3">
+      <div class="flex-grow-1 p-3">
+        <ul class="nav flex-column">
+          <li class="nav-item">
+            <a class="nav-link active" href="#">
+              <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#meus-reportes">
+              <i class="fas fa-list"></i> Meus Reportes
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/#reportar">
+              <i class="fas fa-plus-circle"></i> Novo Reporte
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/#mapa">
+              <i class="fas fa-map"></i> Mapa
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/#estatisticas">
+              <i class="fas fa-chart-bar"></i> Estatísticas
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#premiacao">
+              <i class="fas fa-award"></i> Premiação
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="p-3">
+        <div class="d-flex align-items-center">
+          <img src="https://ui-avatars.com/api/?background=3498db&color=fff" class="user-avatar me-2" id="userAvatar">
+          <div>
+            <div class="fw-bold" id="userName">Carregando...</div>
+            <small><a href="#" class="text-white-50" onclick="logout()">Sair</a></small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white rounded shadow-sm mb-4">
+      <div class="container-fluid">
+        <button class="btn btn-link d-md-none" onclick="toggleSidebar()">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="d-flex align-items-center ms-auto">
+          <div class="dropdown">
+            <button class="btn btn-link dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown">
+              <i class="fas fa-bell"></i>
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge">
+                0
+              </span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end" id="notificationsDropdown">
+              <li><h6 class="dropdown-header">Notificações</h6></li>
+              <li id="noNotifications"><a class="dropdown-item" href="#">Nenhuma notificação</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="container-fluid">
+      <!-- Welcome Section -->
+      <div class="row mb-4">
+        <div class="col-12">
+          <div class="card bg-primary text-white">
+            <div class="card-body">
+              <div class="row align-items-center">
+                <div class="col-md-8">
+                  <h4 class="card-title">Bem-vindo, <span id="welcomeName">Usuário</span>!</h4>
+                  <p class="card-text">Você possui <strong id="userPoints">0 pontos</strong>.</p>
+                  <a href="/#reportar" class="btn btn-light">Reportar Novo Problema</a>
+                </div>
+                <div class="col-md-4 text-center d-none d-md-block">
+                  <i class="fas fa-medal fa-5x opacity-25"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <div class="card-icon mb-3">
+                <i class="fas fa-exclamation-circle"></i>
+              </div>
+              <h5 class="card-title">Reportes Totais</h5>
+              <h2 class="text-primary" id="totalReports">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <div class="card-icon mb-3">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <h5 class="card-title">Resolvidos</h5>
+              <h2 class="text-success" id="solvedReports">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <div class="card-icon mb-3">
+                <i class="fas fa-clock"></i>
+              </div>
+              <h5 class="card-title">Em Andamento</h5>
+              <h2 class="text-warning" id="inProgressReports">0</h2>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 mb-3">
+          <div class="card h-100">
+            <div class="card-body text-center">
+              <div class="card-icon mb-3">
+                <i class="fas fa-star"></i>
+              </div>
+              <h5 class="card-title">Pontuação</h5>
+              <h2 class="text-info" id="pointsDisplay">0</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Reports -->
+      <div class="row">
+        <div class="col-12 mb-4">
+          <div class="card h-100">
+            <div class="card-header bg-white">
+              <h5 class="mb-0">Meus Últimos Reportes</h5>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover" id="reportsTable">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Tipo</th>
+                      <th>Localização</th>
+                      <th>Status</th>
+                      <th>Data</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reportsTableBody">
+                    <tr>
+                      <td colspan="5" class="text-center">Carregando reportes...</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div class="text-center mt-3">
+                <a href="#meus-reportes" class="btn btn-outline-primary">Ver Todos</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botão Flutuante de Reporte -->
+  <a href="/#reportar" class="btn btn-primary report-btn d-flex align-items-center justify-content-center">
+    <i class="fas fa-plus"></i>
+  </a>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // Função para alternar a sidebar em dispositivos móveis
+    function toggleSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const mainContent = document.getElementById('mainContent');
+      sidebar.classList.toggle('active');
+      mainContent.classList.toggle('active');
+    }
+
+    // Função para logout
+    function logout() {
+      firebase.auth().signOut().then(() => {
+        window.location.href = "/";
+      }).catch((error) => {
+        console.error("Erro ao fazer logout:", error);
+      });
+    }
+
+    // Inicialização do dashboard quando o Firebase estiver pronto
+    document.addEventListener('DOMContentLoaded', function() {
+      // Verifica se o usuário está logado
+      firebase.auth().onAuthStateChanged((user) => {
+        if (!user) {
+          // Se não estiver logado, redireciona para a página de login
+          window.location.href = "/login";
+        } else {
+          // Carrega os dados do usuário
+          loadUserData(user);
+          // Carrega os reportes do usuário
+          loadUserReports(user.uid);
+        }
+      });
+    });
+
+    // Carrega os dados do usuário
+    function loadUserData(user) {
+      const db = firebase.firestore();
+      const userRef = db.collection("usuarios").doc(user.uid);
+
+      userRef.get().then((doc) => {
+        if (doc.exists) {
+          const userData = doc.data();
+          
+          // Atualiza a interface com os dados do usuário
+          document.getElementById('userName').textContent = userData.nome || user.email;
+          document.getElementById('welcomeName').textContent = userData.nome || user.email;
+          document.getElementById('userPoints').textContent = `${userData.pontos || 0} pontos`;
+          document.getElementById('pointsDisplay').textContent = userData.pontos || 0;
+          
+          // Atualiza a foto do usuário (se disponível)
+          if (user.photoURL) {
+            document.getElementById('userAvatar').src = user.photoURL;
+          } else if (userData.nome) {
+            document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?background=3498db&color=fff&name=${encodeURIComponent(userData.nome)}`;
+          } else {
+            document.getElementById('userAvatar').src = `https://ui-avatars.com/api/?background=3498db&color=fff&name=${user.email.charAt(0).toUpperCase()}`;
+          }
+        } else {
+          // Se não existir no Firestore, cria o documento
+          userRef.set({
+            nome: user.displayName || '',
+            email: user.email,
+            dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
+            pontos: 0
+          }).then(() => {
+            loadUserData(user); // Recarrega os dados após criar
+          });
+        }
+      }).catch((error) => {
+        console.error("Erro ao carregar dados do usuário:", error);
+      });
+    }
+
+    // Carrega os reportes do usuário
+    function loadUserReports(userId) {
+      const db = firebase.firestore();
+      const reportsRef = db.collection("reportes").where("userId", "==", userId).orderBy("data", "desc").limit(5);
+
+      reportsRef.get().then((querySnapshot) => {
+        const reportsTableBody = document.getElementById('reportsTableBody');
+        reportsTableBody.innerHTML = '';
+        
+        if (querySnapshot.empty) {
+          reportsTableBody.innerHTML = `
+            <tr>
+              <td colspan="5" class="text-center">Nenhum reporte encontrado.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        let totalReports = 0;
+        let solvedReports = 0;
+        let inProgressReports = 0;
+
+        querySnapshot.forEach((doc) => {
+          const report = doc.data();
+          totalReports++;
+          
+          if (report.status === "Resolvido") {
+            solvedReports++;
+          } else if (report.status === "Em andamento") {
+            inProgressReports++;
+          }
+
+          const reportDate = report.data ? report.data.toDate() : new Date();
+          const formattedDate = reportDate.toLocaleDateString('pt-BR');
+
+          reportsTableBody.innerHTML += `
+            <tr>
+              <td>#${doc.id.substring(0, 6)}</td>
+              <td>${report.tipo || 'Não especificado'}</td>
+              <td>${report.localizacao || 'Não informado'}</td>
+              <td><span class="badge ${getStatusBadgeClass(report.status)}">${report.status || 'Pendente'}</span></td>
+              <td>${formattedDate}</td>
+            </tr>
+          `;
+        });
+
+        // Atualiza os contadores
+        document.getElementById('totalReports').textContent = totalReports;
+        document.getElementById('solvedReports').textContent = solvedReports;
+        document.getElementById('inProgressReports').textContent = inProgressReports;
+
+      }).catch((error) => {
+        console.error("Erro ao carregar reportes:", error);
+        document.getElementById('reportsTableBody').innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center text-danger">Erro ao carregar reportes.</td>
+          </tr>
+        `;
+      });
+    }
+
+    // Retorna a classe CSS do badge com base no status
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case 'Resolvido':
+          return 'bg-success';
+        case 'Em andamento':
+          return 'bg-warning text-dark';
+        case 'Recusado':
+          return 'bg-danger';
+        default:
+          return 'bg-secondary';
+      }
+    }
+
+    // Carrega as notificações do usuário
+    function loadNotifications(userId) {
+      const db = firebase.firestore();
+      const notificationsRef = db.collection("notificacoes")
+        .where("userId", "==", userId)
+        .where("lida", "==", false)
+        .orderBy("data", "desc")
+        .limit(5);
+
+      notificationsRef.get().then((querySnapshot) => {
+        const notificationsDropdown = document.getElementById('notificationsDropdown');
+        const notificationBadge = document.getElementById('notificationBadge');
+        const noNotifications = document.getElementById('noNotifications');
+        
+        // Limpa as notificações existentes (exceto o cabeçalho e o item "nenhuma notificação")
+        while (notificationsDropdown.children.length > 2) {
+          notificationsDropdown.removeChild(notificationsDropdown.lastChild);
+        }
+
+        if (querySnapshot.empty) {
+          noNotifications.classList.remove('d-none');
+          notificationBadge.classList.add('d-none');
+          return;
+        }
+
+        noNotifications.classList.add('d-none');
+        notificationBadge.textContent = querySnapshot.size;
+        notificationBadge.classList.remove('d-none');
+
+        querySnapshot.forEach((doc) => {
+          const notification = doc.data();
+          const notificationDate = notification.data.toDate();
+          const formattedTime = notificationDate.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+          const notificationItem = document.createElement('li');
+          notificationItem.innerHTML = `
+            <a class="dropdown-item" href="#" onclick="markAsRead('${doc.id}')">
+              <div class="d-flex justify-content-between">
+                <span>${notification.mensagem}</span>
+                <small class="text-muted">${formattedTime}</small>
+              </div>
+            </a>
+          `;
+          notificationsDropdown.insertBefore(notificationItem, notificationsDropdown.lastElementChild);
+        });
+
+      }).catch((error) => {
+        console.error("Erro ao carregar notificações:", error);
+      });
+    }
+
+    // Marca notificação como lida
+    function markAsRead(notificationId) {
+      const db = firebase.firestore();
+      db.collection("notificacoes").doc(notificationId).update({
+        lida: true
+      }).then(() => {
+        // Recarrega as notificações
+        const user = firebase.auth().currentUser;
+        if (user) {
+          loadNotifications(user.uid);
+        }
+      }).catch((error) => {
+        console.error("Erro ao marcar notificação como lida:", error);
+      });
+    }
+  </script>
+</body>
+</html>
