@@ -1,0 +1,62 @@
+<section id="reportar" class="py-5 bg-light">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-body p-5">
+                        <h2 class="card-title text-center mb-4">Reportar Problema</h2>
+                        
+<form id="reportForm">
+<div class="mb-3">
+<label for="problemType" class="form-label">Tipo de Problema</label>
+<select class="form-select" id="problemType" required>
+  <option selected disabled>Selecione...</option>
+  <option>Buraco na via</option>
+  <option>Iluminação pública</option>
+  <option>Limpeza urbana</option>
+  <option>Sinalização</option>
+  <option>Esgoto entupido</option>
+  <option>Outro</option>
+</select>
+</div>
+
+<div class="mb-3">
+<label class="form-label">Localização</label>
+<div class="input-group mb-2">
+  <!-- Substitua o input antigo por este novo componente -->
+  <gmpx-place-autocomplete 
+    id="autocomplete"
+    class="form-control"
+    placeholder="Digite o endereço"
+    required
+  ></gmpx-place-autocomplete>
+  <button class="btn btn-outline-secondary" type="button" id="locationButton">
+    <i class="fas fa-crosshairs"></i> Usar minha localização
+  </button>
+</div>
+<div id="map-report" style="height: 300px; border-radius: 10px;"></div>
+</div>
+
+<div class="mb-3">
+<label for="problemDescription" class="form-label">Descrição</label>
+<textarea class="form-control" id="problemDescription" rows="3" placeholder="Descreva o problema com detalhes" required></textarea>
+</div>
+<div class="mb-3">
+<label for="problemPhoto" class="form-label">Foto do Problema</label>
+<input class="form-control" type="file" id="problemPhoto" accept="image/*" required>
+<div class="form-text">Tire uma foto clara do problema para ajudar na identificação.</div>
+</div>
+<div class="d-grid">
+<button type="submit" class="btn btn-primary btn-lg">
+  <i class="fas fa-paper-plane me-2"></i>Enviar Reporte
+</button>
+</div>
+</form>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
