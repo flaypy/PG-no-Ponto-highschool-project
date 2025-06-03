@@ -194,3 +194,199 @@
   </script>
 </body>
 </html>
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PG no Ponto - Login</title>
+
+  <!-- Bootstrap & FontAwesome -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <!-- Firebase SDKs (Hosting auto init) -->
+  <script defer src="/__/firebase/11.6.1/firebase-app-compat.js"></script>
+  <script defer src="/__/firebase/11.6.1/firebase-auth-compat.js"></script>
+  <script defer src="/__/firebase/11.6.1/firebase-firestore-compat.js"></script>
+  <script defer src="/__/firebase/init.js?useEmulator=false"></script>
+
+  <style>
+    :root {
+      --primary-color: #2c3e50;
+      --secondary-color: #3498db;
+      --accent-color: #e74c3c;
+      --light-color: #ecf0f1;
+      --dark-color: #2c3e50;
+    }
+
+    body {
+      background-color: var(--light-color);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .login-container {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      width: 100%;
+    }
+
+    .login-logo {
+      text-align: center;
+      color: var(--primary-color);
+    }
+
+    .login-logo i {
+      font-size: 3rem;
+    }
+
+    .login-title {
+      text-align: center;
+      margin: 20px 0;
+      font-weight: bold;
+      color: var(--primary-color);
+    }
+
+    .toggle-password {
+      position: absolute;
+      top: 50%;
+      right: 16px;
+      transform: translateY(-50%);
+      cursor: pointer;
+    }
+
+    .password-container {
+      position: relative;
+    }
+
+    .btn-google {
+      background: white;
+      color: #444;
+      border: 1px solid #ddd;
+    }
+
+    .btn-google:hover {
+      background: #f7f7f7;
+    }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="login-logo">
+      <i class="fas fa-map-marked-alt"></i>
+      <h2>PG no Ponto</h2>
+    </div>
+
+    <h3 class="login-title">Acesse sua conta</h3>
+
+    <form id="formLogin">
+      <div class="mb-3">
+        <input type="email" class="form-control" id="email" placeholder="E-mail" required />
+      </div>
+      <div class="mb-3 password-container">
+        <input type="password" class="form-control" id="senha" placeholder="Senha" required />
+        <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
+      </div>
+      <div class="mb-3 text-end">
+        <a href="/esqueci-senha" style="font-size: 0.9rem;">Esqueceu sua senha?</a>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 mb-3">
+        <i class="fas fa-sign-in-alt me-2"></i>Entrar
+      </button>
+    </form>
+
+    <button class="btn btn-google w-100 mb-3" onclick="loginGoogle()">
+      <i class="fab fa-google me-2"></i> Entrar com Google
+    </button>
+
+    <div id="login-error" class="text-danger text-center"></div>
+
+    <div class="login-footer">
+      Não tem uma conta? <a href="/cadastro">Cadastre-se</a>
+    </div>
+  </div>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    function togglePassword() {
+      const field = document.getElementById('senha');
+      const icon = document.querySelector('.toggle-password');
+      if (field.type === 'password') {
+        field.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        field.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
+    window.addEventListener('load', function () {
+      const loginForm = document.getElementById('formLogin');
+      const errorDiv = document.getElementById('login-error');
+
+      loginForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        const email = document.getElementById('email').value;
+        const senha = document.getElementById('senha').value;
+
+        firebase.auth().signInWithEmailAndPassword(email, senha)
+          .then(() => {
+            window.location.href = "/dashboard";
+          })
+          .catch(err => {
+            errorDiv.textContent = err.message.replace("Firebase: ", "");
+          });
+      });
+
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          window.location.href = "/dashboard";
+        }
+      });
+    });
+
+    function loginGoogle() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      firebase.auth().signInWithPopup(provider)
+        .then((result) => {
+          const user = result.user;
+          const uid = user.uid;
+          const userRef = firebase.firestore().collection("usuarios").doc(uid);
+
+          return userRef.get().then((doc) => {
+            if (!doc.exists) {
+              return userRef.set({
+                nome: user.displayName || '',
+                email: user.email,
+                dataCadastro: firebase.firestore.FieldValue.serverTimestamp(),
+                pontos: 0
+              });
+            }
+          });
+        })
+        .then(() => {
+          window.location.href = "/dashboard";
+        })
+        .catch(err => {
+          document.getElementById('login-error').textContent = err.message.replace("Firebase: ", "");
+        });
+    }
+  </script>
+</body>
+</html>
