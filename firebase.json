@@ -15,8 +15,8 @@
         "destination": "/login.html"
       },
       {
-        "source": "/cadastrar",
-        "destination": "/cadastrar.html"
+        "source": "/cadastro",
+        "destination": "/cadastro.html"
       },
       {
         "source": "/",
