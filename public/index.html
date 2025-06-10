@@ -14,17 +14,7 @@
   <link rel="stylesheet" href="style/style_index.css">
  </head>
  <body>
-  <!-- Barra de Navegação -->
-  <!-- Seção Hero -->
-  <!-- Seção Como Funciona -->
-  <!-- Seção Problemas Comuns -->
-  <!-- Seção Mapa -->
-  <!-- Seção Estatísticas -->
-  <!-- Seção Reportar -->
-  <!-- Seção Sobre -->
-  <!-- Seção FAQ -->
-  <!-- Rodapé -->
-  <!-- Botão Flutuante de Reporte -->
+  <!-- As seções serão carregadas dinamicamente aqui -->
   <div id="nav"></div>
   <div id="hero"></div>
   <div id="how"></div>
@@ -36,27 +26,22 @@
   <div id="faq"></div>
   <div id="footer"></div>
   <div id="button"></div>
-    <!-- seções -->
-    <script src="js/load-sections.js"></script>
+  
   <!-- Bootstrap JS -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
-  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  
   <!-- Scripts do Firebase -->
-  <script defer="" src="/__/firebase/11.6.1/firebase-app-compat.js">
-  </script>
-  <script defer="" src="/__/firebase/11.6.1/firebase-auth-compat.js">
-  </script>
-  <script defer="" src="/__/firebase/11.6.1/firebase-firestore-compat.js">
-  </script>
-  <script defer="" src="/__/firebase/11.6.1/firebase-storage-compat.js">
-  </script>
-  <script defer="" src="/__/firebase/init.js?useEmulator=false">
-  </script>
-  <!-- autenticação -->
+  <script src="/__/firebase/11.6.1/firebase-app-compat.js"></script>
+  <script src="/__/firebase/11.6.1/firebase-auth-compat.js"></script>
+  <script src="/__/firebase/11.6.1/firebase-firestore-compat.js"></script>
+  <script src="/__/firebase/11.6.1/firebase-storage-compat.js"></script>
+  <script src="/__/firebase/init.js?useEmulator=false"></script>
+  
+  <!-- Nossos Scripts -->
+  <script src="js/load-sections.js"></script>
   <script src="js/auth-handler.js"></script>
-  <!-- formulario -->
   <script src= "js/form-handler.js"></script>
-  <!-- mapa -->
   <script src="js/report-map.js"></script>
+  <script src="js/stats-handler.js"></script> <!-- NOVO SCRIPT -->
  </body>
 </html>

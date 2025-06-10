@@ -1,17 +1,37 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Permissões para usuários
+
+    // Regras para a coleção de usuários
     match /usuarios/{userId} {
-      allow write: if request.auth != null && request.auth.uid == userId;
-      allow read: if request.auth != null && request.auth.uid == userId;
+      // O usuário pode ler e atualizar seu próprio perfil.
+      allow read, update: if request.auth != null && request.auth.uid == userId;
+      // Qualquer usuário autenticado pode criar seu próprio perfil.
+      allow create: if request.auth != null;
     }
 
-    // Novas regras para a coleção de reportes
+    // Regras para a coleção de reportes
     match /reportes/{reportId} {
-      allow create: if request.auth != null; // Só usuários autenticados podem criar
-      allow read: if true; // Todos podem ler (ajuste conforme necessidade)
-      allow update, delete: if false; // Apenas admins (implemente se necessário)
+      // Qualquer usuário autenticado pode criar um reporte.
+      // Requisitos:
+      // 1. O 'userId' do reporte deve ser o mesmo do usuário logado.
+      // 2. O endereço deve conter 'Praia Grande'.
+      allow create: if request.auth != null && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.endereco.matches('.*Praia Grande.*');
+      
+      // Qualquer pessoa (autenticada ou não) pode ver os reportes.
+      allow read: if true;
+      
+      // Apenas o dono do reporte pode atualizá-lo ou deletá-lo.
+      // (Futuramente, pode-se adicionar uma regra para administradores)
+      allow update, delete: if request.auth != null && request.auth.uid == resource.data.userId;
     }
+    
+    // Futuramente, pode ter uma coleção de notificações
+    // match /notificacoes/{notificationId} {
+    //   allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+    // }
   }
 }

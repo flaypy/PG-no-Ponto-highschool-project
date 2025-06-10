@@ -45,7 +45,7 @@ async function initializeMapAndForm() {
     addressInput.type = 'text';
     addressInput.id = 'addressInput';
     addressInput.className = 'form-control';
-    addressInput.placeholder = 'Digite o endereço';
+    addressInput.placeholder = 'Digite o endereço em Praia Grande';
     addressInput.required = true;
     autocompleteContainer.replaceWith(addressInput);
 
@@ -76,10 +76,20 @@ async function initializeMapAndForm() {
       draggable: true
     });
 
-    // Inicializa o autocomplete tradicional para addressInput
+    // Define os limites geográficos de Praia Grande para priorizar os resultados
+    const pgBounds = {
+        north: -23.95,
+        south: -24.03,
+        west: -46.53,
+        east: -46.39,
+    };
+
+    // Inicializa o autocomplete, agora com bounds para Praia Grande
     const autocomplete = new google.maps.places.Autocomplete(addressInput, {
       fields: ["formatted_address", "geometry"],
-      componentRestrictions: { country: "br" }
+      componentRestrictions: { country: "br" },
+      bounds: pgBounds,
+      strictBounds: false // 'false' prioriza, mas não restringe totalmente a busca
     });
 
     // Função para atualizar o endereço baseado na posição do marcador
@@ -164,37 +174,32 @@ async function initializeMapAndForm() {
     document.getElementById('reportForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      // Validação do tipo de problema
-      const problemTypeSelect = document.getElementById('problemType');
-      if (problemTypeSelect.selectedIndex === 0) {
-        alert('Por favor, selecione um tipo de problema válido');
-        problemTypeSelect.focus();
-        return;
-      }
-
-      // Exibe indicador de loading no botão de enviar
       const submitBtn = e.target.querySelector('button[type="submit"]');
       const originalBtnText = submitBtn.innerHTML;
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-      submitBtn.disabled = true;
-
+      
       try {
-        // Validações iniciais
+        // Validação do tipo de problema
+        const problemTypeSelect = document.getElementById('problemType');
+        if (problemTypeSelect.selectedIndex === 0) {
+          throw new Error('Por favor, selecione um tipo de problema válido.');
+        }
+
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+        submitBtn.disabled = true;
+
         const photoFile = document.getElementById('problemPhoto').files[0];
         if (!photoFile) {
-          throw new Error('Por favor, selecione uma foto do problema');
+          throw new Error('Por favor, selecione uma foto do problema.');
         }
         if (!firebase.auth().currentUser) {
-          throw new Error('Por favor, faça login para enviar reportes');
+          throw new Error('Por favor, faça login para enviar reportes.');
         }
 
-        // Coleta dados do formulário
         const problemType = document.getElementById('problemType').value;
         const description = document.getElementById('problemDescription').value;
 
-        // Verifica se o marcador foi posicionado
         if (!marker.position) {
-          throw new Error('Por favor, selecione uma localização no mapa');
+          throw new Error('Por favor, selecione uma localização no mapa.');
         }
         const location = {
           lat: marker.position.lat,
@@ -202,13 +207,14 @@ async function initializeMapAndForm() {
           address: addressInput.value || 'Endereço não especificado'
         };
 
-        // Faz upload da imagem
-        console.log('Iniciando upload da imagem...');
-        const photoURL = await uploadImage(photoFile);
-        console.log('Imagem enviada:', photoURL);
+        // **NOVA VALIDAÇÃO DE ENDEREÇO (CLIENT-SIDE)**
+        // Valida se o endereço do reporte está em Praia Grande
+        if (!location.address.includes('Praia Grande')) {
+            throw new Error('Apenas reportes na cidade de Praia Grande são permitidos.');
+        }
 
-        // Prepara dados para Firestore
-        console.log('Preparando dados para Firestore...');
+        const photoURL = await uploadImage(photoFile);
+
         const reportData = {
           tipo: problemType,
           descricao: description,
@@ -220,29 +226,25 @@ async function initializeMapAndForm() {
           userId: firebase.auth().currentUser.uid
         };
 
-        console.log('Enviando para Firestore...', reportData);
         await db.collection('reportes').add(reportData);
-        console.log('Reporte enviado com sucesso!');
 
-        // Feedback visual de sucesso
         submitBtn.innerHTML = '<i class="fas fa-check"></i> Enviado com sucesso!';
         setTimeout(() => {
+          document.getElementById('reportForm').reset();
+          map.setCenter(defaultPosition);
+          marker.position = defaultPosition;
+          addressInput.value = '';
           submitBtn.innerHTML = originalBtnText;
           submitBtn.disabled = false;
         }, 2000);
 
-        // Reseta formulário e mapa
-        document.getElementById('reportForm').reset();
-        map.setCenter(defaultPosition);
-        marker.position = defaultPosition;
-        addressInput.value = '';
       } catch (error) {
         console.error('Erro detalhado:', error);
         submitBtn.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Erro: ${error.message}`;
         setTimeout(() => {
           submitBtn.innerHTML = originalBtnText;
           submitBtn.disabled = false;
-        }, 3000);
+        }, 4000); // Aumentei o tempo para o usuário ler a mensagem de erro
       }
     });
 

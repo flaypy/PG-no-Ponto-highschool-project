@@ -1,0 +1,138 @@
+:root {
+  --primary-color: #2c3e50;
+  --secondary-color: #3498db;
+  --accent-color: #e74c3c;
+  --light-color: #ecf0f1;
+  --dark-color: #2c3e50;
+  --success-color: #2ecc71;
+  --warning-color: #f1c40f;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f8f9fa;
+}
+
+.sidebar {
+  background-color: var(--primary-color);
+  color: white;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  transition: all 0.3s;
+  z-index: 1030;
+}
+
+.sidebar .nav-link {
+  color: rgba(255, 255, 255, 0.8);
+  border-radius: 5px;
+  margin-bottom: 5px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.sidebar .nav-link:hover, .sidebar .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-weight: bold;
+}
+
+.sidebar .nav-link i {
+  margin-right: 15px;
+  width: 20px;
+  text-align: center;
+}
+
+.main-content {
+  margin-left: 250px;
+  padding: 20px;
+  transition: all 0.3s;
+}
+
+.card {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon {
+  font-size: 2rem;
+  color: var(--secondary-color);
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--secondary-color);
+}
+
+.dashboard-section {
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.table-hover tbody tr {
+    cursor: pointer;
+}
+
+.status-badge {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+    border-radius: 20px;
+    color: white;
+    font-weight: 500;
+}
+
+.status-pendente { background-color: var(--warning-color); color: var(--dark-color); }
+.status-resolvido { background-color: var(--success-color); }
+.status-em-andamento { background-color: var(--secondary-color); }
+.status-recusado { background-color: var(--accent-color); }
+
+
+.report-thumb {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+/* Ranking Styles */
+#rankingTableBody tr:nth-child(1) .rank-badge { background-color: #FFD700; color: black; } /* Gold */
+#rankingTableBody tr:nth-child(2) .rank-badge { background-color: #C0C0C0; color: black; } /* Silver */
+#rankingTableBody tr:nth-child(3) .rank-badge { background-color: #CD7F32; color: white; } /* Bronze */
+
+.rank-badge {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+}
+
+
+@media (max-width: 768px) {
+  .sidebar {
+    margin-left: -250px;
+  }
+  .sidebar.active {
+    margin-left: 0;
+  }
+  .main-content {
+    margin-left: 0;
+  }
+}
